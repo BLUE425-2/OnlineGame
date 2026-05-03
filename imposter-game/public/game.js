@@ -30,6 +30,7 @@ let voteTimeRemaining = 12;
 joinBtn.onclick = () => {
   if (inRoom) {
     // Leave room
+
     socket.emit("leaveRoom", currentRoom);
     inRoom = false;
     currentRoom = "";
@@ -38,11 +39,13 @@ joinBtn.onclick = () => {
     document.getElementById("username").disabled = false;
     document.getElementById("roomCode").disabled = false;
     startBtn.style.display = "none";
+    lobbyMessage.style.color = "rgba(79, 70, 229, 0.8)";
     lobbyMessage.textContent = "Enter a room code to create or join a room.";
   } else {
     // Join room
     const username = document.getElementById("username").value.trim();
     const roomCode = document.getElementById("roomCode").value.trim();
+    lobbyMessage.style.color = "#ddddf0";
 
     if (!username || !roomCode) return;
 
