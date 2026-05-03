@@ -7,8 +7,7 @@ body {
   padding: 30px;
 }
 #lobbyinfo {
-  color: rgba(79, 70, 229, 0.8);
-  box-shadow: 0 0 14px rgba(79, 70, 229, 0.25);
+  color: rgba(146, 141, 224, 1);
 }
 
 input, button {
