@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Impostor Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="lobby">
+    <h1>Impostor Game Lobby</h1>
+
+    <input id="username" placeholder="Username">
+    <input id="roomCode" placeholder="Room Code">
+
+    <button id="joinBtn">Join Room</button>
+    <button id="startBtn">Start Game</button>
+
+    <p id="errorMessage" class="error-text hidden"></p>
+    <p id="lobbyMessage">Enter a room code to create or join a room.</p>
+    <div id="lobbyInfo">
+      <p>Join a room and wait for the room creator to start the game.</p>
+      <p>The game will show a short transition before play begins.</p>
+    </div>
+
+    <div id="roomPlayers" class="hidden">
+      <h3>Players in Room</h3>
+      <ul id="lobbyPlayerList"></ul>
+    </div>
+  </div>
+
+  <div id="revealScreen" class="hidden">
+    <div>
+      <div id="revealText">Game Starting...</div>
+      <div id="revealSubtext">Get ready for the first turn.</div>
+    </div>
+  </div>
+
+  <div id="votingScreen" class="hidden">
+    <div>
+      <h2>Vote Someone Out!</h2>
+      <div id="voteTimer">Time remaining: 12s</div>
+      <div id="playerVoteButtons"></div>
+      <div id="voteProgress">Votes cast: <span id="votesCast">0</span>/<span id="totalPlayers">0</span></div>
+    </div>
+  </div>
+
+  <div id="voteResultScreen" class="hidden">
+    <div>
+      <h2>Vote Results</h2>
+      <div id="votedOutDisplay"></div>
+      <div id="impostorReveal"></div>
+    </div>
+  </div>
+
+  <div id="gameScreen" class="hidden">
+    <h2 id="phaseDisplay">Taking turns describing...</h2>
+    <h2 id="roleDisplay">Waiting for game to start...</h2>
+
+    <div id="playerArea" class="hidden">
+      <h3>Players</h3>
+      <ul id="players"></ul>
+    </div>
+
+    <div id="turnArea" class="hidden">
+      <h3 id="turnDisplay">Current Turn: Waiting...</h3>
+      <button id="nextTurnBtn">Next Turn</button>
+    </div>
+
+    <div id="chatArea" class="hidden">
+      <h3>Discussion Chat</h3>
+      <div id="chatBox"></div>
+      <input id="chatInput" placeholder="Type message...">
+      <button id="sendChatBtn">Send</button>
+    </div>
+
+    <br><br>
+
+    <button id="endDiscussionBtn">Vote End Discussion</button>
+
+    <p id="voteStatus"></p>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="game.js"></script>
+
+</body>
+</html>

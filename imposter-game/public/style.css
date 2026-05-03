@@ -1,0 +1,257 @@
+body {
+  font-family: Arial;
+  background: #111;
+  color: rgba(79, 70, 229, 0.8);
+  box-shadow: 0 0 14px rgba(79, 70, 229, 0.25);
+  text-align: center;
+  padding: 30px;
+}
+#lobbyinfo {
+  color: rgba(79, 70, 229, 0.8);
+  box-shadow: 0 0 14px rgba(79, 70, 229, 0.25);
+}
+
+input, button {
+  padding: 10px;
+  margin: 5px;
+  font-size: 16px;
+}
+
+#username, #roomCode, #chatInput {
+  width: 200px;
+  max-width: 80%;
+  background: rgba(15, 23, 42, 0.95);
+  border: 2px solid rgba(79, 70, 229, 0.8);
+  border-radius: 14px;
+  color: #93c5fd;
+  padding: 12px 14px;
+  box-shadow: 0 0 14px rgba(79, 70, 229, 0.25);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+#username::placeholder,
+#roomCode::placeholder,
+#chatInput::placeholder {
+  color: #93c5fd;
+  opacity: 0.7;
+}
+
+#username:focus,
+#roomCode:focus,
+#chatInput:focus {
+  outline: none;
+  border-color: #60a5fa;
+  color: #dbeafe;
+  background: rgba(30, 41, 59, 0.98);
+  box-shadow: 0 0 22px rgba(59, 130, 246, 0.55);
+}
+
+button {
+  cursor: pointer;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+
+button:hover {
+  background: #6366f1;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+#chatBox {
+  width: 80%;
+  max-width: 600px;
+  height: 200px;
+  margin: 20px auto;
+  padding: 10px;
+  background: #222;
+  overflow-y: auto;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#lobby {
+  display: block;
+}
+
+#revealScreen {
+  position: fixed;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  z-index: 10;
+  display: none;
+}
+
+#revealScreen.show {
+  display: flex;
+}
+
+#revealText {
+  font-size: 3rem;
+  font-weight: bold;
+  letter-spacing: 0.2rem;
+  color: #e2e8f0;
+}
+
+#revealSubtext {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+  color: #d1d5db;
+}
+
+#votingScreen {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  z-index: 10;
+}
+
+#votingScreen.show {
+  display: flex;
+}
+
+#votingScreen > div {
+  text-align: center;
+}
+
+#votingScreen h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #a5b4fc;
+}
+
+#voteTimer {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: #fb7185;
+  font-weight: bold;
+}
+
+#playerVoteButtons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin: 2rem auto;
+  max-width: 600px;
+}
+
+.voteButton {
+  padding: 15px;
+  background: #3f3f46;
+  color: white;
+  border: 2px solid #4f46e5;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.voteButton:hover:not(:disabled) {
+  background: #4f46e5;
+  transform: scale(1.05);
+}
+
+.voteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.voteButton.voted {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+#voteProgress {
+  font-size: 1.2rem;
+  margin-top: 1.5rem;
+  color: #cbd5e1;
+}
+
+#voteResultScreen {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  z-index: 10;
+}
+
+#voteResultScreen.show {
+  display: flex;
+}
+
+#voteResultScreen > div {
+  text-align: center;
+}
+
+#voteResultScreen h2 {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  color: #a5b4fc;
+}
+
+#votedOutDisplay {
+  font-size: 1.5rem;
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background: #222;
+  border-radius: 8px;
+}
+
+#impostorReveal {
+  font-size: 1.8rem;
+  margin-top: 2rem;
+  padding: 2rem;
+  background: #2a1a1a;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+#roomPlayers {
+  margin-top: 30px;
+  padding: 20px;
+  background: #1a1a1a;
+  border-radius: 8px;
+  border: 2px solid #4f46e5;
+}
+
+#roomPlayers h3 {
+  color: #a5b4fc;
+  margin-top: 0;
+}
+
+#lobbyPlayerList {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+  display: inline-block;
+}
+
+#lobbyPlayerList li {
+  padding: 8px 16px;
+  margin: 5px 0;
+  background: #2a2a2a;
+  border-radius: 6px;
+  color: #e2e8f0;
+}
+
+#phaseDisplay {
+  margin-top: 0;
+  font-size: 2rem;
+  color: #a5b4fc;
+}
