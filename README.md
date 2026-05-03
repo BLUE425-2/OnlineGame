@@ -1,2 +1,2 @@
 # OnlineGame
-some testing
+Now a working Game! Just needs some little details.
