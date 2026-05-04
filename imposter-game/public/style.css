@@ -101,6 +101,19 @@ ul {
   font-weight: bold;
   letter-spacing: 0.2rem;
   color: #e2e8f0;
+  font-family: 'Courier New', monospace;
+}
+
+#revealText::after {
+  content: '';
+  animation: loadingDots 1.8s steps(4, end) infinite;
+}
+
+@keyframes loadingDots {
+  0%, 20% { content: ''; }
+  40% { content: '.'; }
+  60% { content: '..'; }
+  80%, 100% { content: '...'; }
 }
 
 #revealSubtext {
@@ -180,6 +193,40 @@ ul {
   color: #cbd5e1;
 }
 
+#voteSuspense {
+  margin-top: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: rgba(79, 70, 229, 0.15);
+  border: 1px solid rgba(79, 70, 229, 0.5);
+  border-radius: 10px;
+  color: #c7d2fe;
+  font-size: 1.1rem;
+  animation: pulse 1.6s ease-in-out infinite;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+#voteSuspense.visible {
+  opacity: 1;
+}
+
+.fade-hidden {
+  opacity: 0;
+}
+
+.fade-visible,
+.fade-in {
+  opacity: 1;
+}
+
+.fade-out {
+  opacity: 0;
+}
+
+#votingScreen {
+  transition: opacity 0.6s ease;
+}
+
 #voteResultScreen {
   position: fixed;
   inset: 0;
@@ -188,10 +235,12 @@ ul {
   justify-content: center;
   background: #111;
   z-index: 10;
+  transition: opacity 3s ease;
 }
 
 #voteResultScreen.show {
   display: flex;
+  opacity: 1;
 }
 
 #voteResultScreen > div {

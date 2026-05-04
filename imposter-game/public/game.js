@@ -10,11 +10,14 @@ const revealScreen = document.getElementById("revealScreen");
 const gameScreen = document.getElementById("gameScreen");
 const votingScreen = document.getElementById("votingScreen");
 const voteResultScreen = document.getElementById("voteResultScreen");
+const voteSuspense = document.getElementById("voteSuspense");
 const phaseDisplay = document.getElementById("phaseDisplay");
 const lobbyMessage = document.getElementById("lobbyMessage");
 const playerArea = document.getElementById("playerArea");
 const chatArea = document.getElementById("chatArea");
 const roomPlayers = document.getElementById("roomPlayers");
+const chatInput = document.getElementById("chatInput");
+const sendChatBtn = document.getElementById("sendChatBtn");
 
 lobby.classList.remove("hidden");
 revealScreen.classList.add("hidden");
@@ -64,8 +67,8 @@ document.getElementById("startBtn").onclick = () => {
   socket.emit("startGame", currentRoom);
 };
 
-document.getElementById("sendChatBtn").onclick = () => {
-  const message = document.getElementById("chatInput").value.trim();
+function sendChatMessage() {
+  const message = chatInput.value.trim();
   const username = document.getElementById("username").value.trim();
 
   if (!message) return;
@@ -76,8 +79,16 @@ document.getElementById("sendChatBtn").onclick = () => {
     message
   });
 
-  document.getElementById("chatInput").value = "";
-};
+  chatInput.value = "";
+}
+
+sendChatBtn.onclick = sendChatMessage;
+chatInput.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    sendChatMessage();
+  }
+});
 
 document.getElementById("endDiscussionBtn").onclick = () => {
   socket.emit("voteEndDiscussion", currentRoom);
@@ -210,6 +221,7 @@ socket.on("votingStarted", ({ players }) => {
   voteTimeRemaining = 12;
   document.getElementById("totalPlayers").textContent = players.length;
   document.getElementById("votesCast").textContent = "0";
+  voteSuspense.classList.add("hidden");
 
   const playerVoteButtons = document.getElementById("playerVoteButtons");
   playerVoteButtons.innerHTML = "";
@@ -231,36 +243,63 @@ socket.on("voteUpdate", ({ votesCast, totalPlayers }) => {
 });
 
 socket.on("voteResults", ({ votedOut, isImpostor, impostor }) => {
-  votingScreen.classList.add("hidden");
-  votingScreen.classList.remove("show");
-  voteResultScreen.classList.remove("hidden");
-  voteResultScreen.classList.add("show");
+  voteSuspense.textContent = "All votes are in. Counting results...";
+  voteSuspense.classList.remove("hidden");
+  voteSuspense.classList.add("visible");
 
-  const votedOutDisplay = document.getElementById("votedOutDisplay");
-  const impostorReveal = document.getElementById("impostorReveal");
-
-  if (isImpostor) {
-    votedOutDisplay.innerHTML = `
-      <p>✓ <strong>${votedOut.username}</strong> was voted out.</p>
-      <p style="color: #10b981; font-size: 1.3rem; margin-top: 0.5rem;">They WERE the impostor!</p>
-    `;
-  } else {
-    votedOutDisplay.innerHTML = `
-      <p>✗ <strong>${votedOut.username}</strong> was voted out.</p>
-      <p style="color: #fb7185; font-size: 1.3rem; margin-top: 0.5rem;">They were NOT the impostor.</p>
-    `;
-  }
-
-  impostorReveal.innerHTML = `
-    <p>The actual impostor was:</p>
-    <p style="color: #fbbf24; font-size: 2rem; margin-top: 0.5rem;"><strong>${impostor.username}</strong></p>
-  `;
+  const playerVoteButtons = document.getElementById("playerVoteButtons");
+  playerVoteButtons.querySelectorAll("button").forEach(btn => btn.disabled = true);
 
   setTimeout(() => {
-    voteResultScreen.classList.add("hidden");
-    voteResultScreen.classList.remove("show");
-    location.reload();
-  }, 5000);
+    voteSuspense.classList.remove("visible");
+    voteSuspense.classList.add("fade-out");
+    votingScreen.classList.add("fade-out");
+
+    setTimeout(() => {
+      votingScreen.classList.add("hidden");
+      votingScreen.classList.remove("show", "fade-out");
+      voteSuspense.classList.add("hidden");
+      voteSuspense.classList.remove("fade-out");
+
+      voteResultScreen.classList.remove("hidden");
+      voteResultScreen.classList.add("show", "fade-hidden");
+
+      requestAnimationFrame(() => {
+        voteResultScreen.classList.remove("fade-hidden");
+        voteResultScreen.classList.add("fade-visible");
+      });
+
+      const votedOutDisplay = document.getElementById("votedOutDisplay");
+      const impostorReveal = document.getElementById("impostorReveal");
+
+      if (isImpostor) {
+        votedOutDisplay.innerHTML = `
+          <p>✓ <strong>${votedOut.username}</strong> was voted out.</p>
+          <p style="color: #10b981; font-size: 1.3rem; margin-top: 0.5rem;">They WERE the impostor!</p>
+        `;
+      } else {
+        votedOutDisplay.innerHTML = `
+          <p>✗ <strong>${votedOut.username}</strong> was voted out.</p>
+          <p style="color: #fb7185; font-size: 1.3rem; margin-top: 0.5rem;">They were NOT the impostor.</p>
+        `;
+      }
+
+      impostorReveal.innerHTML = `
+        <p>The actual impostor was:</p>
+        <p style="color: #fbbf24; font-size: 2rem; margin-top: 0.5rem;"><strong>${impostor.username}</strong></p>
+      `;
+
+      setTimeout(() => {
+        voteResultScreen.classList.remove("fade-in");
+      }, 600);
+
+      setTimeout(() => {
+        voteResultScreen.classList.add("hidden");
+        voteResultScreen.classList.remove("show");
+        location.reload();
+      }, 5000);
+    }, 650);
+  }, 2500);
 });
 
 function voteForPlayer(playerId, button, username) {
