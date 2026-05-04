@@ -7,6 +7,9 @@ const startBtn = document.getElementById("startBtn");
 const joinBtn = document.getElementById("joinBtn");
 const lobby = document.getElementById("lobby");
 const revealScreen = document.getElementById("revealScreen");
+const roleScreen = document.getElementById("roleScreen");
+const categoryScreen = document.getElementById("categoryScreen");
+const wordScreen = document.getElementById("wordScreen");
 const gameScreen = document.getElementById("gameScreen");
 const votingScreen = document.getElementById("votingScreen");
 const voteResultScreen = document.getElementById("voteResultScreen");
@@ -21,6 +24,9 @@ const sendChatBtn = document.getElementById("sendChatBtn");
 
 lobby.classList.remove("hidden");
 revealScreen.classList.add("hidden");
+roleScreen.classList.add("hidden");
+categoryScreen.classList.add("hidden");
+wordScreen.classList.add("hidden");
 gameScreen.classList.add("hidden");
 votingScreen.classList.add("hidden");
 voteResultScreen.classList.add("hidden");
@@ -29,6 +35,9 @@ startBtn.style.display = "none";
 
 let hasVoted = false;
 let voteTimeRemaining = 12;
+let playerRole = null;
+let gameCategory = null;
+let gameWord = null;
 
 joinBtn.onclick = () => {
   if (inRoom) {
@@ -173,28 +182,79 @@ socket.on("gameStarted", () => {
   setTimeout(() => {
     revealScreen.classList.add("hidden");
     revealScreen.classList.remove("show");
-    phaseDisplay.textContent = "Discuss about the word...";
-    gameScreen.classList.remove("hidden");
-    gameScreen.style.display = "block";
-    revealGameDetails();
-  }, 5000);
+    // Wait for role event to show role screen
+  }, 2000);
 });
 
 function revealGameDetails() {
   if (!gameScreen.classList.contains("hidden")) {
     playerArea.classList.remove("hidden");
     chatArea.classList.remove("hidden");
+
+    const roleDisplay = document.getElementById("roleDisplay");
+    if (playerRole === "impostor") {
+      roleDisplay.textContent = "You are the IMPOSTOR";
+      roleDisplay.style.color = "#fb7185";
+    } else {
+      roleDisplay.textContent = `Category: ${gameCategory} | Word: ${gameWord}`;
+      roleDisplay.style.color = "#10b981";
+    }
   }
 }
 
 socket.on("role", data => {
+  playerRole = data.role;
+  gameCategory = data.category;
+  gameWord = data.word;
+
   const roleDisplay = document.getElementById("roleDisplay");
+  const categoryDisplay = document.getElementById("categoryDisplay");
+  const wordDisplay = document.getElementById("wordDisplay");
 
   if (data.role === "impostor") {
     roleDisplay.textContent = "You are the IMPOSTOR";
+    roleDisplay.style.color = "#fb7185";
   } else {
-    roleDisplay.textContent = "Secret Word: " + data.word;
+    roleDisplay.textContent = "You are a DETECTIVE";
+    roleDisplay.style.color = "#10b981";
   }
+
+  categoryDisplay.textContent = data.category;
+  if (data.role === "impostor") {
+    wordDisplay.textContent = "???";
+  } else {
+    wordDisplay.textContent = data.word;
+  }
+
+  // Show role screen
+  roleScreen.classList.remove("hidden");
+  roleScreen.classList.add("show");
+
+  // Start the sequence after role is shown
+  setTimeout(() => {
+    roleScreen.classList.add("hidden");
+    roleScreen.classList.remove("show");
+    categoryScreen.classList.remove("hidden");
+    categoryScreen.classList.add("show");
+
+    // After category animation, show word
+    setTimeout(() => {
+      categoryScreen.classList.add("hidden");
+      categoryScreen.classList.remove("show");
+      wordScreen.classList.remove("hidden");
+      wordScreen.classList.add("show");
+
+      // After word animation, go to discussion
+      setTimeout(() => {
+        wordScreen.classList.add("hidden");
+        wordScreen.classList.remove("show");
+        phaseDisplay.textContent = "Discuss about the word...";
+        gameScreen.classList.remove("hidden");
+        gameScreen.style.display = "block";
+        revealGameDetails();
+      }, 3000);
+    }, 3000);
+  }, 3000);
 });
 
 socket.on("chatMessage", data => {

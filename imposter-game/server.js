@@ -192,9 +192,19 @@ function startRound(roomCode) {
   const room = rooms[roomCode];
   if (!room || room.players.length < 2) return;
 
-  const words = ["Pizza", "Dragon", "Rocket", "Beach", "Laptop"];
+  const categories = [
+    { category: "Food", words: ["Pizza", "Burger", "Pasta", "Sushi", "Cake"] },
+    { category: "Animals", words: ["Dragon", "Lion", "Eagle", "Shark", "Panda"] },
+    { category: "Technology", words: ["Rocket", "Laptop", "Phone", "Robot", "Drone"] },
+    { category: "Places", words: ["Beach", "Mountain", "Castle", "Forest", "City"] },
+    { category: "Objects", words: ["Guitar", "Clock", "Book", "Car", "Key"] }
+  ];
 
-  room.word = words[Math.floor(Math.random() * words.length)];
+  const selectedCategory = categories[Math.floor(Math.random() * categories.length)];
+  const selectedWord = selectedCategory.words[Math.floor(Math.random() * selectedCategory.words.length)];
+
+  room.category = selectedCategory.category;
+  room.word = selectedWord;
 
   const impostor =
     room.players[Math.floor(Math.random() * room.players.length)];
@@ -204,11 +214,14 @@ function startRound(roomCode) {
   room.players.forEach(player => {
     if (player.id === room.impostorId) {
       io.to(player.id).emit("role", {
-        role: "impostor"
+        role: "impostor",
+        category: room.category,
+        word: room.word
       });
     } else {
       io.to(player.id).emit("role", {
-        role: "crewmate",
+        role: "detective",
+        category: room.category,
         word: room.word
       });
     }
