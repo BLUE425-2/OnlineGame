@@ -32,6 +32,12 @@ const chatArea = document.getElementById("chatArea");
 const roomPlayers = document.getElementById("roomPlayers");
 const chatInput = document.getElementById("chatInput");
 const sendChatBtn = document.getElementById("sendChatBtn");
+const revealText = document.getElementById("revealText");
+const revealSubtext = document.getElementById("revealSubtext");
+const voteRevealMessage = document.getElementById("voteRevealMessage");
+const voteResultsContent = document.getElementById("voteResultsContent");
+
+let dotAnimationInterval = null;
 
 lobby.classList.remove("hidden");
 revealScreen.classList.add("hidden");
@@ -49,6 +55,45 @@ let voteTimeRemaining = 12;
 let playerRole = null;
 let gameCategory = null;
 let gameWord = null;
+
+function startDotAnimation(element, baseText) {
+  clearInterval(dotAnimationInterval);
+  let dotCount = 0;
+  element.textContent = baseText;
+  dotAnimationInterval = setInterval(() => {
+    dotCount = (dotCount + 1) % 4;
+    element.textContent = baseText + ".".repeat(dotCount);
+  }, 600);
+}
+
+function stopDotAnimation() {
+  clearInterval(dotAnimationInterval);
+  dotAnimationInterval = null;
+}
+
+function crossfadeScreens(fromEl, toEl, duration = 450) {
+  if (fromEl) {
+    fromEl.classList.remove("fade-in");
+    fromEl.classList.add("fade-out");
+  }
+
+  if (toEl) {
+    toEl.classList.remove("hidden");
+    toEl.classList.add("show");
+    requestAnimationFrame(() => {
+      toEl.classList.remove("fade-out");
+      toEl.classList.add("fade-in");
+    });
+  }
+
+  if (fromEl) {
+    setTimeout(() => {
+      fromEl.classList.add("hidden");
+      fromEl.classList.remove("fade-out");
+      fromEl.classList.remove("show");
+    }, duration);
+  }
+}
 
 joinBtn.onclick = () => {
   if (inRoom) {
@@ -184,16 +229,20 @@ socket.on("gameStarted", () => {
   lobby.classList.add("hidden");
   gameScreen.classList.add("hidden");
   gameScreen.style.display = "none";
-  revealScreen.classList.remove("hidden");
-  revealScreen.classList.add("show");
 
   playerArea.classList.add("hidden");
   chatArea.classList.add("hidden");
 
+  revealText.textContent = "Game Starting";
+  revealSubtext.textContent = "Preparing roles and secret word...";
+  startDotAnimation(revealText, "Game Starting");
+
+  revealScreen.classList.remove("hidden");
+  revealScreen.classList.add("show", "fade-in");
+
   setTimeout(() => {
-    revealScreen.classList.add("hidden");
-    revealScreen.classList.remove("show");
-    // Wait for role event to show role screen
+    stopDotAnimation();
+    crossfadeScreens(revealScreen, roleScreen);
   }, 2000);
 });
 
@@ -242,8 +291,9 @@ function startLocalTurnTimer(seconds) {
 
 socket.on("turnTakingStarted", ({ totalTurns }) => {
   phaseDisplay.textContent = "Turn-taking round";
-  gameScreen.classList.add("hidden");
-  turnScreen.classList.remove("hidden");
+  crossfadeScreens(gameScreen, turnScreen);
+  turnScreen.classList.add("show");
+
   turnClues.classList.remove("hidden");
   chatArea.classList.add("hidden");
   discussionArea.classList.add("hidden");
@@ -282,8 +332,7 @@ socket.on("turnClue", ({ username, clue, skipped }) => {
 
 socket.on("turnTakingComplete", () => {
   phaseDisplay.textContent = "Discussion phase";
-  turnScreen.classList.add("hidden");
-  gameScreen.classList.remove("hidden");
+  crossfadeScreens(turnScreen, gameScreen);
   discussionArea.classList.remove("hidden");
   cluePanel.classList.remove("hidden");
   chatArea.classList.remove("hidden");
@@ -335,29 +384,20 @@ socket.on("role", data => {
 
   // Show role screen
   roleScreen.classList.remove("hidden");
-  roleScreen.classList.add("show");
+  roleScreen.classList.add("show", "fade-in");
 
   // Start the sequence after role is shown
   setTimeout(() => {
-    roleScreen.classList.add("hidden");
-    roleScreen.classList.remove("show");
-    categoryScreen.classList.remove("hidden");
-    categoryScreen.classList.add("show");
+    crossfadeScreens(roleScreen, categoryScreen);
 
     // After category animation, show word
     setTimeout(() => {
-      categoryScreen.classList.add("hidden");
-      categoryScreen.classList.remove("show");
-      wordScreen.classList.remove("hidden");
-      wordScreen.classList.add("show");
+      crossfadeScreens(categoryScreen, wordScreen);
 
       // After word animation, go to discussion
       setTimeout(() => {
-        wordScreen.classList.add("hidden");
-        wordScreen.classList.remove("show");
+        crossfadeScreens(wordScreen, gameScreen);
         phaseDisplay.textContent = "Preparing turn-taking...";
-        gameScreen.classList.remove("hidden");
-        gameScreen.style.display = "block";
         revealGameDetails();
         socket.emit("readyForTurnTaking", currentRoom);
       }, 3000);
@@ -381,9 +421,7 @@ socket.on("endDiscussionVoteCount", ({ votes, needed }) => {
 });
 
 socket.on("votingStarted", ({ players }) => {
-  gameScreen.classList.add("hidden");
-  votingScreen.classList.remove("hidden");
-  votingScreen.classList.add("show");
+  crossfadeScreens(gameScreen, votingScreen);
 
   hasVoted = false;
   voteTimeRemaining = 12;
@@ -429,6 +467,12 @@ socket.on("voteResults", ({ votedOut, isImpostor, impostor }) => {
       voteSuspense.classList.add("hidden");
       voteSuspense.classList.remove("fade-out");
 
+      voteResultsContent.classList.add("result-hidden");
+      voteResultsContent.classList.remove("show");
+      voteRevealMessage.style.opacity = "1";
+      voteRevealMessage.textContent = "Revealing impostor";
+      startDotAnimation(voteRevealMessage, "Revealing impostor");
+
       voteResultScreen.classList.remove("hidden");
       voteResultScreen.classList.add("show", "fade-hidden");
 
@@ -437,34 +481,38 @@ socket.on("voteResults", ({ votedOut, isImpostor, impostor }) => {
         voteResultScreen.classList.add("fade-visible");
       });
 
-      const votedOutDisplay = document.getElementById("votedOutDisplay");
-      const impostorReveal = document.getElementById("impostorReveal");
-
-      if (isImpostor) {
-        votedOutDisplay.innerHTML = `
-          <p>✓ <strong>${votedOut.username}</strong> was voted out.</p>
-          <p style="color: #10b981; font-size: 1.3rem; margin-top: 0.5rem;">They WERE the impostor!</p>
-        `;
-      } else {
-        votedOutDisplay.innerHTML = `
-          <p>✗ <strong>${votedOut.username}</strong> was voted out.</p>
-          <p style="color: #fb7185; font-size: 1.3rem; margin-top: 0.5rem;">They were NOT the impostor.</p>
-        `;
-      }
-
-      impostorReveal.innerHTML = `
-        <p>The actual impostor was:</p>
-        <p style="color: #fbbf24; font-size: 2rem; margin-top: 0.5rem;"><strong>${impostor.username}</strong></p>
-      `;
-
       setTimeout(() => {
-        voteResultScreen.classList.remove("fade-in");
-      }, 600);
+        stopDotAnimation();
+        voteRevealMessage.textContent = "Revealing impostor.";
 
-      setTimeout(() => {
-        voteResultScreen.classList.add("hidden");
-        voteResultScreen.classList.remove("show");
-        location.reload();
+        const votedOutDisplay = document.getElementById("votedOutDisplay");
+        const impostorReveal = document.getElementById("impostorReveal");
+
+        if (isImpostor) {
+          votedOutDisplay.innerHTML = `
+            <p>✓ <strong>${votedOut.username}</strong> was voted out.</p>
+            <p style="color: #10b981; font-size: 1.3rem; margin-top: 0.5rem;">They WERE the impostor!</p>
+          `;
+        } else {
+          votedOutDisplay.innerHTML = `
+            <p>✗ <strong>${votedOut.username}</strong> was voted out.</p>
+            <p style="color: #fb7185; font-size: 1.3rem; margin-top: 0.5rem;">They were NOT the impostor.</p>
+          `;
+        }
+
+        impostorReveal.innerHTML = `
+          <p>The actual impostor was:</p>
+          <p style="color: #fbbf24; font-size: 2rem; margin-top: 0.5rem;"><strong>${impostor.username}</strong></p>
+        `;
+
+        voteResultsContent.classList.remove("result-hidden");
+        voteResultsContent.classList.add("show");
+
+        setTimeout(() => {
+          voteResultScreen.classList.add("hidden");
+          voteResultScreen.classList.remove("show", "fade-visible");
+          location.reload();
+        }, 5000);
       }, 5000);
     }, 650);
   }, 2500);
