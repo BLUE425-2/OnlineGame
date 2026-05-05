@@ -17,6 +17,17 @@ const voteSuspense = document.getElementById("voteSuspense");
 const phaseDisplay = document.getElementById("phaseDisplay");
 const lobbyMessage = document.getElementById("lobbyMessage");
 const playerArea = document.getElementById("playerArea");
+const discussionArea = document.getElementById("discussionArea");
+const cluePanel = document.getElementById("cluePanel");
+const clueSummary = document.getElementById("clueSummary");
+const turnScreen = document.getElementById("turnScreen");
+const turnDisplay = document.getElementById("turnDisplay");
+const turnTimerEl = document.getElementById("turnTimer");
+const turnInput = document.getElementById("turnInput");
+const submitClueBtn = document.getElementById("submitClueBtn");
+const turnClues = document.getElementById("turnClues");
+const turnClueList = document.getElementById("turnClueList");
+const gameRoleDisplay = document.getElementById("gameRoleDisplay");
 const chatArea = document.getElementById("chatArea");
 const roomPlayers = document.getElementById("roomPlayers");
 const chatInput = document.getElementById("chatInput");
@@ -186,18 +197,114 @@ socket.on("gameStarted", () => {
   }, 2000);
 });
 
+let currentTurnId = null;
+let turnTimerInterval = null;
+
+submitClueBtn.onclick = () => {
+  const clue = turnInput.value.trim();
+  if (!clue || !currentTurnId || currentTurnId !== socket.id) return;
+
+  socket.emit("submitClue", {
+    roomCode: currentRoom,
+    clue
+  });
+
+  turnInput.value = "";
+  submitClueBtn.disabled = true;
+};
+
+function updateTurnInput(active, placeholder) {
+  turnScreen.classList.remove("hidden");
+  turnInput.style.display = active ? "block" : "none";
+  submitClueBtn.style.display = active ? "inline-block" : "none";
+  turnInput.disabled = !active;
+  submitClueBtn.disabled = !active;
+  turnInput.placeholder = placeholder;
+  turnInput.value = "";
+  if (active) {
+    turnInput.focus();
+  }
+}
+
+function startLocalTurnTimer(seconds) {
+  clearInterval(turnTimerInterval);
+  let remaining = seconds;
+  turnTimerEl.textContent = `Time remaining: ${remaining}s`;
+
+  turnTimerInterval = setInterval(() => {
+    remaining -= 1;
+    turnTimerEl.textContent = `Time remaining: ${remaining}s`;
+    if (remaining <= 0) {
+      clearInterval(turnTimerInterval);
+    }
+  }, 1000);
+}
+
+socket.on("turnTakingStarted", ({ totalTurns }) => {
+  phaseDisplay.textContent = "Turn-taking round";
+  gameScreen.classList.add("hidden");
+  turnScreen.classList.remove("hidden");
+  turnClues.classList.remove("hidden");
+  chatArea.classList.add("hidden");
+  discussionArea.classList.add("hidden");
+  playerArea.classList.remove("hidden");
+  turnClueList.innerHTML = "";
+  clueSummary.innerHTML = "";
+  updateTurnInput(false, `Waiting for the first player...`);
+  turnDisplay.textContent = `Turn order set: ${totalTurns} players`;
+});
+
+socket.on("turnStart", ({ currentTurnId: turnId, currentTurnName, currentIndex, totalTurns }) => {
+  currentTurnId = turnId;
+  const isActive = socket.id === turnId;
+  turnDisplay.textContent = isActive ? "It is your turn" : `${currentTurnName}'s turn right now`;
+  updateTurnInput(isActive, isActive ? "Type one word describing the secret word..." : `Waiting for ${currentTurnName} to submit a clue...`);
+  startLocalTurnTimer(12);
+
+  if (!isActive) {
+    submitClueBtn.disabled = true;
+  }
+});
+
+socket.on("turnClue", ({ username, clue, skipped }) => {
+  const li = document.createElement("li");
+  if (skipped) {
+    li.textContent = `${username} did not submit a word.`;
+    li.style.opacity = "0.7";
+  } else {
+    li.textContent = `${username}: ${clue}`;
+  }
+  turnClueList.appendChild(li);
+  clueSummary.appendChild(li.cloneNode(true));
+  turnClues.classList.remove("hidden");
+  cluePanel.classList.remove("hidden");
+});
+
+socket.on("turnTakingComplete", () => {
+  phaseDisplay.textContent = "Discussion phase";
+  turnScreen.classList.add("hidden");
+  gameScreen.classList.remove("hidden");
+  discussionArea.classList.remove("hidden");
+  cluePanel.classList.remove("hidden");
+  chatArea.classList.remove("hidden");
+  playerArea.classList.remove("hidden");
+  clearInterval(turnTimerInterval);
+});
+
 function revealGameDetails() {
   if (!gameScreen.classList.contains("hidden")) {
     playerArea.classList.remove("hidden");
-    chatArea.classList.remove("hidden");
+    discussionArea.classList.add("hidden");
+    cluePanel.classList.add("hidden");
+    turnClues.classList.add("hidden");
+    turnScreen.classList.add("hidden");
 
-    const roleDisplay = document.getElementById("roleDisplay");
     if (playerRole === "impostor") {
-      roleDisplay.textContent = "You are the IMPOSTOR";
-      roleDisplay.style.color = "#fb7185";
+      gameRoleDisplay.textContent = "You are the IMPOSTOR";
+      gameRoleDisplay.style.color = "#fb7185";
     } else {
-      roleDisplay.textContent = `Category: ${gameCategory} | Word: ${gameWord}`;
-      roleDisplay.style.color = "#10b981";
+      gameRoleDisplay.textContent = `Category: ${gameCategory} | Word: ${gameWord}`;
+      gameRoleDisplay.style.color = "#10b981";
     }
   }
 }
@@ -248,10 +355,11 @@ socket.on("role", data => {
       setTimeout(() => {
         wordScreen.classList.add("hidden");
         wordScreen.classList.remove("show");
-        phaseDisplay.textContent = "Discuss about the word...";
+        phaseDisplay.textContent = "Preparing turn-taking...";
         gameScreen.classList.remove("hidden");
         gameScreen.style.display = "block";
         revealGameDetails();
+        socket.emit("readyForTurnTaking", currentRoom);
       }, 3000);
     }, 3000);
   }, 3000);

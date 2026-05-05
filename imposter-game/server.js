@@ -16,8 +16,13 @@ io.on("connection", socket => {
       rooms[roomCode] = {
         players: [],
         word: "",
+        category: "",
         impostorId: null,
-        currentSpeakerIndex: -1,
+        turnOrder: [],
+        turnIndex: 0,
+        turnClues: [],
+        turnTakingActive: false,
+        turnTimer: null,
         endDiscussionVotes: {},
         votingActive: false,
         playerVotes: {},
@@ -69,6 +74,33 @@ io.on("connection", socket => {
       username,
       message
     });
+  });
+
+  socket.on("readyForTurnTaking", roomCode => {
+    const room = rooms[roomCode];
+    if (!room || room.turnTakingActive) return;
+    startTurnTaking(roomCode);
+  });
+
+  socket.on("submitClue", ({ roomCode, clue }) => {
+    const room = rooms[roomCode];
+    if (!room || !room.turnTakingActive) return;
+
+    const currentPlayer = room.turnOrder[room.turnIndex];
+    if (!currentPlayer || currentPlayer.id !== socket.id) return;
+
+    clearTimeout(room.turnTimer);
+    const clueEntry = {
+      playerId: socket.id,
+      username: currentPlayer.username,
+      clue: clue || "",
+      skipped: false
+    };
+    room.turnClues.push(clueEntry);
+    io.to(roomCode).emit("turnClue", clueEntry);
+
+    room.turnIndex += 1;
+    startNextTurn(roomCode);
   });
 
   socket.on("voteEndDiscussion", roomCode => {
@@ -205,6 +237,12 @@ function startRound(roomCode) {
 
   room.category = selectedCategory.category;
   room.word = selectedWord;
+  room.turnOrder = shuffle(room.players.slice());
+  room.turnIndex = 0;
+  room.turnClues = [];
+  room.turnTakingActive = false;
+  clearTimeout(room.turnTimer);
+  room.turnTimer = null;
 
   const impostor =
     room.players[Math.floor(Math.random() * room.players.length)];
@@ -228,6 +266,79 @@ function startRound(roomCode) {
   });
 
   room.currentSpeakerIndex = -1;
+}
+
+function startTurnTaking(roomCode) {
+  const room = rooms[roomCode];
+  if (!room || room.turnTakingActive || room.players.length === 0) return;
+
+  room.turnTakingActive = true;
+  room.turnOrder = shuffle(room.players.slice());
+  room.turnIndex = 0;
+  room.turnClues = [];
+
+  io.to(roomCode).emit("turnTakingStarted", {
+    totalTurns: room.turnOrder.length
+  });
+
+  startNextTurn(roomCode);
+}
+
+function startNextTurn(roomCode) {
+  const room = rooms[roomCode];
+  if (!room || !room.turnTakingActive) return;
+
+  if (room.turnIndex >= room.turnOrder.length) {
+    endTurnTaking(roomCode);
+    return;
+  }
+
+  const currentPlayer = room.turnOrder[room.turnIndex];
+  if (!currentPlayer) {
+    room.turnIndex += 1;
+    startNextTurn(roomCode);
+    return;
+  }
+
+  io.to(roomCode).emit("turnStart", {
+    currentTurnId: currentPlayer.id,
+    currentTurnName: currentPlayer.username,
+    currentIndex: room.turnIndex + 1,
+    totalTurns: room.turnOrder.length
+  });
+
+  clearTimeout(room.turnTimer);
+  room.turnTimer = setTimeout(() => {
+    const skippedEntry = {
+      playerId: currentPlayer.id,
+      username: currentPlayer.username,
+      clue: "",
+      skipped: true
+    };
+    room.turnClues.push(skippedEntry);
+    io.to(roomCode).emit("turnClue", skippedEntry);
+    room.turnIndex += 1;
+    startNextTurn(roomCode);
+  }, 12000);
+}
+
+function endTurnTaking(roomCode) {
+  const room = rooms[roomCode];
+  if (!room) return;
+
+  room.turnTakingActive = false;
+  clearTimeout(room.turnTimer);
+  room.turnTimer = null;
+
+  io.to(roomCode).emit("turnTakingComplete");
+}
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
 
 

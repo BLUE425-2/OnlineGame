@@ -17,16 +17,26 @@ input, button {
 }
 
 #username, #roomCode, #chatInput {
-  width: 200px;
-  max-width: 80%;
-  background: rgba(15, 23, 42, 0.95);
+  width: 100%;
+  max-width: 100%;
+  background: rgba(30, 41, 59, 0.98);
   border: 2px solid rgba(79, 70, 229, 0.8);
-  border-radius: 14px;
+  border-radius: 12px;
   color: #93c5fd;
   padding: 12px 14px;
   box-shadow: 0 0 14px rgba(79, 70, 229, 0.25);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, background 0.2s ease;
+  font-size: 1rem;
 }
+
+#chatInput:focus {
+  outline: none;
+  border-color: #60a5fa;
+  color: #dbeafe;
+  background: rgba(30, 41, 59, 0.98);
+  box-shadow: 0 0 22px rgba(59, 130, 246, 0.55);
+}
+
 
 #username::placeholder,
 #roomCode::placeholder,
@@ -63,16 +73,31 @@ ul {
 }
 
 #chatBox {
-  width: 80%;
-  max-width: 600px;
-  height: 200px;
-  margin: 20px auto;
-  padding: 10px;
-  background: #222;
+  width: 100%;
+  height: 250px;
+  margin: 20px 0;
+  padding: 12px;
+  background: rgba(17, 24, 39, 0.8);
   overflow-y: auto;
-  border-radius: 8px;
-  text-align: left;
+  border-radius: 12px;
+  border: 1px solid rgba(79, 70, 229, 0.3);
+  color: #e5e7eb;
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
+
+#chatBox div {
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border-left: 3px solid rgba(79, 70, 229, 0.5);
+}
+
+#chatBox strong {
+  color: #fbbf24;
+}
+
 
 .hidden {
   display: none !important;
@@ -116,11 +141,15 @@ ul {
   margin-bottom: 2rem;
 }
 
-#roleDisplay {
+#roleDisplay, #gameRoleDisplay {
   font-size: 3rem;
   font-weight: bold;
   color: #fbbf24;
   margin: 2rem 0;
+}
+
+#gameRoleDisplay {
+  font-size: 1.8rem;
 }
 
 #categoryScreen h1, #wordScreen h1 {
@@ -133,7 +162,7 @@ ul {
   font-size: 4rem;
   font-weight: bold;
   color: #60a5fa;
-  font-family: 'Courier New', monospace;
+  font-family: 'Verdana', monospace;
   letter-spacing: 0.1rem;
   opacity: 0;
   animation: fadeIn 1.5s ease-in-out 0.5s forwards;
@@ -143,10 +172,195 @@ ul {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+#turnScreen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(17, 24, 39, 0.95);
+  backdrop-filter: blur(4px);
+  z-index: 20;
+}
+
+#turnScreen > div {
+  max-width: 800px;
+  width: 90%;
+  padding: 32px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.95));
+  border: 2px solid rgba(79, 70, 229, 0.5);
+  border-radius: 24px;
+  box-shadow: 0 0 60px rgba(79, 70, 229, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+#turnScreen h2 {
+  font-size: 2.2rem;
+  color: #a5b4fc;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 0 10px rgba(79, 70, 229, 0.5);
+}
+
+#turnDisplay {
+  font-size: 1.8rem;
+  color: #fbbf24;
   font-weight: bold;
-  letter-spacing: 0.2rem;
-  color: #e2e8f0;
-  font-family: 'Courier New', monospace;
+  margin: 1rem 0;
+  text-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+}
+
+#turnTimer {
+  font-size: 1.4rem;
+  margin: 1rem 0;
+  color: #fb7185;
+  font-weight: bold;
+  text-shadow: 0 0 6px rgba(251, 113, 133, 0.5);
+}
+
+#turnInput {
+  width: 100%;
+  max-width: 700px;
+  margin: 1rem 0;
+  background: rgba(30, 41, 59, 0.98);
+  border: 2px solid rgba(79, 70, 229, 0.8);
+  border-radius: 12px;
+  color: #93c5fd;
+  padding: 14px 16px;
+  resize: vertical;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#turnInput:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+#submitClueBtn {
+  margin-top: 1rem;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+#submitClueBtn:hover {
+  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  transform: translateY(-2px);
+}
+
+#turnClues {
+  margin-top: 2rem;
+  text-align: left;
+}
+
+#turnClues h4 {
+  font-size: 1.5rem;
+  color: #a5b4fc;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 8px rgba(79, 70, 229, 0.5);
+}
+
+#turnClueList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid rgba(79, 70, 229, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+#turnClueList li {
+  background: rgba(255, 255, 255, 0.05);
+  margin: 6px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #e5e7eb;
+  border-left: 4px solid rgba(79, 70, 229, 0.5);
+  transition: background 0.2s ease;
+}
+
+#turnClueList li:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+#discussionArea {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 24px auto;
+  max-width: 1200px;
+}
+
+#cluePanel {
+  flex: 1 1 320px;
+  min-width: 280px;
+  max-width: 400px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.95));
+  border: 2px solid rgba(79, 70, 229, 0.5);
+  border-radius: 18px;
+  padding: 20px;
+  text-align: left;
+  box-shadow: 0 0 40px rgba(79, 70, 229, 0.2);
+}
+
+#cluePanel h3 {
+  font-size: 1.6rem;
+  color: #a5b4fc;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 8px rgba(79, 70, 229, 0.5);
+}
+
+#clueSummary {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#clueSummary li {
+  background: rgba(255, 255, 255, 0.05);
+  margin: 8px 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  color: #e5e7eb;
+  border-left: 4px solid rgba(79, 70, 229, 0.5);
+  transition: background 0.2s ease;
+}
+
+#clueSummary li:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+#chatArea {
+  flex: 1 1 480px;
+  min-width: 360px;
+  max-width: 600px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.95));
+  border: 2px solid rgba(79, 70, 229, 0.5);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 0 40px rgba(79, 70, 229, 0.2);
+}
+
+#chatArea h3 {
+  font-size: 1.6rem;
+  color: #a5b4fc;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 8px rgba(79, 70, 229, 0.5);
 }
 
 #revealText::after {

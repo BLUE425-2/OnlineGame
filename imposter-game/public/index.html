@@ -76,23 +76,25 @@
 
   <div id="gameScreen" class="hidden">
     <h2 id="phaseDisplay">Taking turns describing...</h2>
-    <h2 id="roleDisplay">Waiting for game to start...</h2>
+    <h2 id="gameRoleDisplay">Waiting for game to start...</h2>
 
     <div id="playerArea" class="hidden">
       <h3>Players</h3>
       <ul id="players"></ul>
     </div>
 
-    <div id="turnArea" class="hidden">
-      <h3 id="turnDisplay">Current Turn: Waiting...</h3>
-      <button id="nextTurnBtn">Next Turn</button>
-    </div>
+    <div id="discussionArea" class="hidden">
+      <div id="cluePanel" class="hidden">
+        <h3>Submitted Clues</h3>
+        <ul id="clueSummary"></ul>
+      </div>
 
-    <div id="chatArea" class="hidden">
-      <h3>Discussion Chat</h3>
-      <div id="chatBox"></div>
-      <input id="chatInput" placeholder="Type message...">
-      <button id="sendChatBtn">Send</button>
+      <div id="chatArea" class="hidden">
+        <h3>Discussion Chat</h3>
+        <div id="chatBox"></div>
+        <input id="chatInput" placeholder="Type message...">
+        <button id="sendChatBtn">Send</button>
+      </div>
     </div>
 
     <br><br>
@@ -100,6 +102,20 @@
     <button id="endDiscussionBtn">Vote End Discussion</button>
 
     <p id="voteStatus"></p>
+  </div>
+
+  <div id="turnScreen" class="hidden">
+    <div>
+      <h2 id="phaseDisplayTurn">Turn-taking round</h2>
+      <h3 id="turnDisplay">Waiting for the first player...</h3>
+      <div id="turnTimer">Time remaining: 12s</div>
+      <textarea id="turnInput" rows="4" placeholder="Type one word describing the secret word..." autocomplete="off"></textarea>
+      <button id="submitClueBtn">Submit Clue</button>
+      <div id="turnClues" class="hidden">
+        <h4>Clues so far</h4>
+        <ul id="turnClueList"></ul>
+      </div>
+    </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
