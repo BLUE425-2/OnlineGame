@@ -273,16 +273,19 @@ ul {
 }
 
 #turnInput {
+  display: block;
   width: 100%;
-  max-width: 700px;
-  margin: 1rem 0;
+  max-width: 350px;
+  margin: 1rem auto;
   background: rgba(15, 23, 42, 0.99);
   border: 2px solid rgba(79, 70, 229, 0.5);
   border-radius: 10px;
   color: #e0e7ff;
-  padding: 14px 16px;
-  resize: vertical;
-  font-size: 1rem;
+  padding: 10px 12px;
+  resize: none;
+  overflow: hidden;
+  font-family: Verdana, sans-serif;
+  font-size: 0.95rem;
   transition: all 0.3s ease;
 }
 

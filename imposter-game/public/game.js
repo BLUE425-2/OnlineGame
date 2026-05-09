@@ -155,6 +155,15 @@ chatInput.addEventListener("keydown", event => {
   }
 });
 
+turnInput.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    if (!submitClueBtn.disabled) {
+      submitClueBtn.click();
+    }
+  }
+});
+
 document.getElementById("endDiscussionBtn").onclick = () => {
   socket.emit("voteEndDiscussion", currentRoom);
 };
@@ -243,7 +252,7 @@ socket.on("gameStarted", () => {
   setTimeout(() => {
     stopDotAnimation();
     crossfadeScreens(revealScreen, roleScreen);
-  }, 2000);
+  }, 5000);
 });
 
 let currentTurnId = null;
@@ -331,12 +340,30 @@ socket.on("turnClue", ({ username, clue, skipped }) => {
 });
 
 socket.on("turnTakingComplete", () => {
+  // Clear any inline display styles and reset screens
+  gameScreen.style.display = "";
+  roleScreen.style.display = "none";
+  categoryScreen.style.display = "none";
+  wordScreen.style.display = "none";
+  
+  // Hide role/category/word screens
+  roleScreen.classList.add("hidden");
+  categoryScreen.classList.add("hidden");
+  wordScreen.classList.add("hidden");
+  
   phaseDisplay.textContent = "Discussion phase";
   crossfadeScreens(turnScreen, gameScreen);
-  discussionArea.classList.remove("hidden");
-  cluePanel.classList.remove("hidden");
-  chatArea.classList.remove("hidden");
-  playerArea.classList.remove("hidden");
+  
+  // Ensure gameScreen and discussion elements are properly displayed
+  setTimeout(() => {
+    gameScreen.classList.remove("hidden");
+    discussionArea.classList.remove("hidden");
+    cluePanel.classList.remove("hidden");
+    chatArea.classList.remove("hidden");
+    playerArea.classList.remove("hidden");
+    gameRoleDisplay.style.display = "none";  // Hide role display during discussion
+  }, 50);
+  
   clearInterval(turnTimerInterval);
 });
 
@@ -382,27 +409,36 @@ socket.on("role", data => {
     wordDisplay.textContent = data.word;
   }
 
-  // Show role screen
-  roleScreen.classList.remove("hidden");
-  roleScreen.classList.add("show", "fade-in");
+  // Show "Game starting..." message first
+  revealText.textContent = "Game Starting";
+  revealSubtext.textContent = "";
+  startDotAnimation(revealText, "Game Starting");
+  revealScreen.classList.remove("hidden");
+  revealScreen.classList.add("show", "fade-in");
 
-  // Start the sequence after role is shown
+  // After 5 seconds, show role screen
   setTimeout(() => {
-    crossfadeScreens(roleScreen, categoryScreen);
+    stopDotAnimation();
+    crossfadeScreens(revealScreen, roleScreen);
 
-    // After category animation, show word
+    // Start the sequence after role is shown
     setTimeout(() => {
-      crossfadeScreens(categoryScreen, wordScreen);
+      crossfadeScreens(roleScreen, categoryScreen);
 
-      // After word animation, go to discussion
+      // After category animation, show word
       setTimeout(() => {
-        crossfadeScreens(wordScreen, gameScreen);
-        phaseDisplay.textContent = "Preparing turn-taking...";
-        revealGameDetails();
-        socket.emit("readyForTurnTaking", currentRoom);
+        crossfadeScreens(categoryScreen, wordScreen);
+
+        // After word animation, go to discussion
+        setTimeout(() => {
+          crossfadeScreens(wordScreen, gameScreen);
+          phaseDisplay.textContent = "Preparing turn-taking...";
+          revealGameDetails();
+          socket.emit("readyForTurnTaking", currentRoom);
+        }, 3000);
       }, 3000);
     }, 3000);
-  }, 3000);
+  }, 5000);
 });
 
 socket.on("chatMessage", data => {
