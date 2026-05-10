@@ -36,6 +36,8 @@ const revealText = document.getElementById("revealText");
 const revealSubtext = document.getElementById("revealSubtext");
 const voteRevealMessage = document.getElementById("voteRevealMessage");
 const voteResultsContent = document.getElementById("voteResultsContent");
+const endDiscussionBtn = document.getElementById("endDiscussionBtn");
+const voteTurnTakingBtn = document.getElementById("voteTurnTakingBtn");
 
 let dotAnimationInterval = null;
 
@@ -166,6 +168,10 @@ turnInput.addEventListener("keydown", event => {
 
 document.getElementById("endDiscussionBtn").onclick = () => {
   socket.emit("voteEndDiscussion", currentRoom);
+};
+
+voteTurnTakingBtn.onclick = () => {
+  socket.emit("voteTurnTaking", currentRoom);
 };
 
 socket.on("playerList", players => {
@@ -451,9 +457,20 @@ socket.on("chatMessage", data => {
   chatBox.scrollTop = chatBox.scrollHeight;
 });
 
-socket.on("endDiscussionVoteCount", ({ votes, needed }) => {
-  document.getElementById("voteStatus").textContent =
-    `${votes}/${needed} votes to end discussion`;
+socket.on("discussionVoteMessage", data => {
+  const chatBox = document.getElementById("chatBox");
+  const text = typeof data === "string" ? data : data?.text || "";
+  const votes = data?.votes;
+  const needed = data?.needed;
+  const countText = typeof votes === "number" && typeof needed === "number"
+    ? ` <span class="discussion-vote-count">(${votes}/${needed} votes)</span>`
+    : "";
+
+  chatBox.innerHTML += `
+    <div class="discussion-vote-chat">${text}${countText}</div>
+  `;
+
+  chatBox.scrollTop = chatBox.scrollHeight;
 });
 
 socket.on("votingStarted", ({ players }) => {
@@ -469,20 +486,49 @@ socket.on("votingStarted", ({ players }) => {
   playerVoteButtons.innerHTML = "";
 
   players.forEach(player => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "voteButtonWrapper";
+
     const button = document.createElement("button");
     button.className = "voteButton";
     button.textContent = player.username;
     button.disabled = player.id === socket.id;
+    button.dataset.playerId = player.id;
     button.onclick = () => voteForPlayer(player.id, button, player.username);
-    playerVoteButtons.appendChild(button);
+
+    const voteInfo = document.createElement("div");
+    voteInfo.className = "voteVoterList";
+    voteInfo.textContent = "No votes yet.";
+
+    wrapper.appendChild(button);
+    wrapper.appendChild(voteInfo);
+    playerVoteButtons.appendChild(wrapper);
   });
 
   startVoteTimer();
 });
 
-socket.on("voteUpdate", ({ votesCast, totalPlayers }) => {
+socket.on("voteUpdate", ({ votesCast, totalPlayers, voteDetails }) => {
   document.getElementById("votesCast").textContent = votesCast;
+  document.getElementById("totalPlayers").textContent = totalPlayers;
+  updateVoteButtons(voteDetails);
 });
+
+function updateVoteButtons(voteDetails) {
+  if (!voteDetails) return;
+  const playerVoteButtons = document.getElementById("playerVoteButtons");
+  voteDetails.forEach(detail => {
+    const button = playerVoteButtons.querySelector(`button[data-player-id="${detail.id}"]`);
+    const info = button?.nextElementSibling;
+    if (info) {
+      if (detail.voters.length === 0) {
+        info.textContent = "No votes yet.";
+      } else {
+        info.textContent = `Voted by: ${detail.voters.join(", ")}`;
+      }
+    }
+  });
+}
 
 socket.on("voteResults", ({ votedOut, isImpostor, impostor }) => {
   voteSuspense.textContent = "All votes are in. Counting results...";

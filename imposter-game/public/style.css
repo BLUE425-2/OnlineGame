@@ -114,6 +114,17 @@ ul {
   transition: background 0.2s ease;
 }
 
+.discussion-vote-chat {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.08);
+  border-left-color: rgba(16, 185, 129, 0.7);
+}
+
+.discussion-vote-count {
+  opacity: 0.8;
+  color: #d9f99d;
+}
+
 #chatBox div:hover {
   background: rgba(255, 255, 255, 0.06);
 }
@@ -494,6 +505,22 @@ ul {
   gap: 1rem;
   margin: 2rem auto;
   max-width: 600px;
+}
+
+.voteButtonWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: stretch;
+  text-align: left;
+}
+
+.voteVoterList {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  min-height: 1.2rem;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .voteButton {

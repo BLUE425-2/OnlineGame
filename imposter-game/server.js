@@ -24,6 +24,7 @@ io.on("connection", socket => {
         turnTakingActive: false,
         turnTimer: null,
         endDiscussionVotes: {},
+        turnTakingVotes: {},
         votingActive: false,
         playerVotes: {},
         voteTimer: null
@@ -111,15 +112,47 @@ io.on("connection", socket => {
 
     const voteCount = Object.keys(room.endDiscussionVotes).length;
     const neededVotes = Math.floor(room.players.length / 2) + 1;
+    const voter = room.players.find(p => p.id === socket.id);
 
-    io.to(roomCode).emit("endDiscussionVoteCount", {
-      votes: voteCount,
-      needed: neededVotes
-    });
+    if (voter) {
+      io.to(roomCode).emit("discussionVoteMessage", {
+        type: "endDiscussion",
+        text: `${voter.username} voted to end discussion. (${voteCount}/${neededVotes} votes)`,
+        votes: voteCount,
+        needed: neededVotes
+      });
+    }
 
     if (voteCount >= neededVotes) {
       startVoting(roomCode);
       room.endDiscussionVotes = {};
+      room.turnTakingVotes = {};
+    }
+  });
+
+  socket.on("voteTurnTaking", roomCode => {
+    const room = rooms[roomCode];
+    if (!room) return;
+
+    room.turnTakingVotes[socket.id] = true;
+
+    const voteCount = Object.keys(room.turnTakingVotes).length;
+    const neededVotes = Math.floor(room.players.length / 2) + 1;
+    const voter = room.players.find(p => p.id === socket.id);
+
+    if (voter) {
+      io.to(roomCode).emit("discussionVoteMessage", {
+        type: "turnTaking",
+        text: `${voter.username} voted to do additional turns. (${voteCount}/${neededVotes} votes)`,
+        votes: voteCount,
+        needed: neededVotes
+      });
+    }
+
+    if (voteCount >= neededVotes) {
+      room.endDiscussionVotes = {};
+      room.turnTakingVotes = {};
+      startTurnTaking(roomCode);
     }
   });
 
@@ -129,9 +162,24 @@ io.on("connection", socket => {
 
     room.playerVotes[socket.id] = votedForId;
 
+    const voteDetails = room.players.map(player => ({
+      id: player.id,
+      username: player.username,
+      voters: []
+    }));
+
+    Object.entries(room.playerVotes).forEach(([voterId, targetId]) => {
+      const voter = room.players.find(p => p.id === voterId);
+      const entry = voteDetails.find(item => item.id === targetId);
+      if (voter && entry) {
+        entry.voters.push(voter.username);
+      }
+    });
+
     io.to(roomCode).emit("voteUpdate", {
       votesCast: Object.keys(room.playerVotes).length,
-      totalPlayers: room.players.length
+      totalPlayers: room.players.length,
+      voteDetails
     });
 
     if (Object.keys(room.playerVotes).length === room.players.length) {
@@ -172,6 +220,16 @@ function startVoting(roomCode) {
 
   io.to(roomCode).emit("votingStarted", {
     players: room.players
+  });
+
+  io.to(roomCode).emit("voteUpdate", {
+    votesCast: 0,
+    totalPlayers: room.players.length,
+    voteDetails: room.players.map(player => ({
+      id: player.id,
+      username: player.username,
+      voters: []
+    }))
   });
 
   room.voteTimer = setTimeout(() => {
